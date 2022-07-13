@@ -4,22 +4,22 @@ function CoinTracker() {
   const [loading, setLoading] = useState(true);
   const [coins, setCoins] = useState([]);
   const [usd, setUsd] = useState(0);
-  const [selectcoin, setSelectcoin] = useState([]);
+  const [coininfo, setCoininfo] = useState({ name: "", price: 0 });
   const [mark, setMark] = useState([]);
 
   const howMuch = (event) => setUsd(event.target.value);
 
+  const Select = (e) => {
+    let a = e.target.value.split(",");
+    setCoininfo({ name: a[0], price: a[1] });
+  };
+
   const onClick = () => {
     setMark((currentArray) => [
-      { usd: usd, value: usd / selectcoin },
+      { name: coininfo.name, usd: usd, value: usd / coininfo.price },
       ...currentArray,
     ]);
   };
-
-  const selectCoin = (e) =>{
-    setSelectcoin(e.target.value);
-  }
-    
 
   useEffect(() => {
     fetch("https://api.coinpaprika.com/v1/tickers")
@@ -44,11 +44,11 @@ function CoinTracker() {
           />
           <button onClick={onClick}>MARK</button>
           <br />
-          <select onChange={selectCoin}>
+          <select onChange={Select}>
             <option>SELECT COIN</option>
             {coins.map((coin, index) => (
               <option
-                value={coin.quotes.USD.price}
+                value={[coin.name, coin.quotes.USD.price]}
                 key={index}
                 name={coin.name}
               >
@@ -59,7 +59,7 @@ function CoinTracker() {
           <ul>
             {mark.map((item, index) => (
               <li key={index}>
-                {item.usd} USD = {(item.value).toFixed(2)} COIN(i want to change to the coin name but struggling)
+                {item.usd} USD = {item.value.toFixed(2)} {item.name}
               </li>
             ))}
           </ul>

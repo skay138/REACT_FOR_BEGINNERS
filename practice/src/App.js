@@ -1,45 +1,84 @@
 import { useState, useEffect } from "react";
-import MapContainer from "./MapContainer";
+import { Map, MapMarker } from "react-kakao-maps-sdk";
+import "./App.css";
 
+const { kakao } = window;
 
 function App() {
-  const [counter, setCounter] = useState(0);
-  const [keyword, setKeyword] = useState("");
-  const [show, setShow] = useState(false);
-  const showmap = () => setShow((current) => !current);
-  const onClick = () => setCounter((prev) => prev + 1);
-  const onChange = (event) => setKeyword(event.target.value);
-  useEffect(() => {
-    console.log("I run only once.");
-  }, []);
+  //geolocation
+  const [state, setState] = useState({
+    center: {
+      lat: 33.450701,
+      lng: 126.570667,
+    },
+    errMsg: null,
+    isLoading: true,
+  });
 
-  useEffect(() => {
-    if (keyword !== "" && keyword.length > 1) {
-      console.log("I run when 'keyword' changes.");
+  function geolocation() {
+    if (navigator.geolocation) {
+      // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setState((prev) => ({
+            ...prev,
+            center: {
+              lat: position.coords.latitude, // 위도
+              lng: position.coords.longitude, // 경도
+            },
+            isLoading: false,
+          }));
+        },
+        (err) => {
+          setState((prev) => ({
+            ...prev,
+            errMsg: err.message,
+            isLoading: false,
+          }));
+        }
+      );
+    } else {
+      // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+      setState((prev) => ({
+        ...prev,
+        errMsg: "geolocation을 사용할수 없어요..",
+        isLoading: false,
+      }));
     }
-  }, [keyword]);
+  }
 
   useEffect(() => {
-    console.log("I run when 'counter' changes.");
-  }, [counter]);
-
-  useEffect(() => {
-    console.log("I run when keyword&counter changes.");
-  }, [keyword, counter]);
-
+    geolocation();
+  }, []);
   return (
     <div>
-      <input
-        onChange={onChange}
-        type="text"
-        placeholder="Search here..."
-        value={keyword}
-      />
-      <h1>{counter}</h1>
-      <button onClick={onClick}>COUNT UP</button>
-      <br />
-      <button onClick={showmap}>{show? "Hide" : "Show"}</button>
-      {show ? <MapContainer/> : null}
+      <Map // 지도를 표시할 Container
+        center={state.center}
+        style={{
+          // 지도의 크기
+          width: "100%",
+          height: "450px",
+        }}
+        level={4} // 지도의 확대 레벨
+      >
+        <MapMarker
+          position={state.center}
+          onClick={onclick}
+          image={{
+            src: "https://img.icons8.com/ios-glyphs/100/000000/user-location.png",
+            size: {
+              width: 50,
+              height: 50,
+              options: {
+                offset: {
+                  x: 27,
+                  y: 69,
+                },
+              },
+            },
+          }}
+        ></MapMarker>
+      </Map>
     </div>
   );
 }
